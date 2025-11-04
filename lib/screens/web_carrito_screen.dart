@@ -5,9 +5,8 @@ import '../providers/carrito_provider.dart';
 import '../providers/navigation_provider.dart';
 import '../models/carrito_item.dart';
 import 'checkout_screen.dart';
-import '../widgets/responsive_layout.dart'; // Usaremos esto para centrar
-import '../widgets/web_header.dart';
-import '../widgets/web_footer.dart';
+import '../widgets/responsive_layout.dart';
+import '../widgets/web_page_layout.dart';
 
 class WebCarritoScreen extends StatelessWidget {
   const WebCarritoScreen({super.key});
@@ -15,24 +14,12 @@ class WebCarritoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final carritoProvider = Provider.of<CarritoProvider>(context);
-
-    return Scaffold(
-      backgroundColor: AppStyles.backgroundColor, // Fondo gris pálido
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const WebHeader(selectedIndex: 2), // Índice 2 para Carrito
-
-            // Contenido principal
-            if (carritoProvider.estaVacio)
-              _buildCarritoVacio(context)
-            else
-              _buildCarritoLleno(context, carritoProvider),
-
-            const WebFooter(),
-          ],
-        ),
-      ),
+    return WebPageLayout(
+      selectedIndex: 2,
+      backgroundColor: AppStyles.backgroundColor, // Fondo gris
+      body: (carritoProvider.estaVacio)
+          ? _buildCarritoVacio(context)
+          : _buildCarritoLleno(context, carritoProvider),
     );
   }
 

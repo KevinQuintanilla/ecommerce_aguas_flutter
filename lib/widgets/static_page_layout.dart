@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'web_header.dart';
-import 'web_footer.dart';
+import 'web_page_layout.dart'; 
 import 'responsive_layout.dart';
 import '../utils/app_styles.dart';
 
@@ -18,40 +17,33 @@ class StaticPageLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    // Usa el WebPageLayout para obtener el Header y el Footer "pegajoso"
+    return WebPageLayout(
+      selectedIndex: -1, // Ninguna pestaña principal seleccionada
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Usamos -1 para que no se active ningún tab principal
-            const WebHeader(selectedIndex: -1), 
-            ResponsiveLayout(
-              maxWidth: 900, // Un ancho bueno para texto
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Título
-                    Text(
-                      title,
-                      style: AppStyles.headingStyle.copyWith(fontSize: 36, color: AppStyles.primaryColor),
-                    ),
-                    const SizedBox(height: 16),
-                    // Fecha
-                    Text(
-                      "Última actualización: $lastUpdated",
-                      style: AppStyles.bodyTextStyle.copyWith(fontSize: 14, color: AppStyles.lightTextColor, fontStyle: FontStyle.italic),
-                    ),
-                    const Divider(height: 40),
-                    // Contenido
-                    ...children,
-                  ],
-                ),
+      body: ResponsiveLayout(
+        maxWidth: 900, // Ancho para texto
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Título
+              Text(
+                title,
+                style: AppStyles.headingStyle.copyWith(fontSize: 36, color: AppStyles.primaryColor),
               ),
-            ),
-            const WebFooter(),
-          ],
+              const SizedBox(height: 16),
+              // Fecha
+              Text(
+                "Última actualización: $lastUpdated",
+                style: AppStyles.bodyTextStyle.copyWith(fontSize: 14, color: AppStyles.lightTextColor, fontStyle: FontStyle.italic),
+              ),
+              const Divider(height: 40),
+              // Contenido
+              ...children,
+            ],
+          ),
         ),
       ),
     );

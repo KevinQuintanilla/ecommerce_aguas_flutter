@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-// import 'package:video_player/video_player.dart'; // <-- ELIMINADO
 import 'package:provider/provider.dart';
 import '../models/producto.dart';
 import '../services/producto_service.dart';
 import '../utils/app_styles.dart';
 import '../widgets/producto_card.dart';
-import '../widgets/web_header.dart';
-import '../widgets/web_footer.dart';
 import '../providers/navigation_provider.dart';
 import '../utils/constants.dart';
+import '../widgets/web_page_layout.dart';
 
 const List<Map<String, dynamic>> webCategories = [
   {'name': 'Agua Purificada', 'icon': Icons.water_drop},
@@ -84,19 +82,17 @@ class _WebHomeScreenState extends State<WebHomeScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView( 
-        child: Column(
-          children: [
-            const WebHeader(selectedIndex: 0), 
-            _buildHeroSection(context), 
-            _buildCarouselSection(), 
-            _buildFeaturedProductsSection(context),
-            _buildReviewsSection(),
-            const WebFooter(),
-          ],
-        ),
+    return WebPageLayout(
+      selectedIndex: 0,
+      backgroundColor: AppStyles.backgroundColor,
+      body: Column(
+        children: [
+          _buildHeroSection(context),
+          _buildCarouselSection(),
+          const SizedBox(height: 60),
+          _buildFeaturedProductsSection(context),
+          _buildReviewsSection(),
+        ],
       ),
     );
   }
@@ -282,47 +278,6 @@ class _WebHomeScreenState extends State<WebHomeScreen> with SingleTickerProvider
   }
 }
 
-// --- WIDGETS INTERNOS DE AYUDA (PARA TRADUCIR LOS COMPONENTES DE REACT) ---
-// La tarjeta cuadrada de categoría
-class _CategoryCard extends StatelessWidget {
-  final IconData icon;
-  final String name;
-  final VoidCallback onTap;
-
-  const _CategoryCard({required this.icon, required this.name, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      hoverColor: Colors.blue[50],
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppStyles.backgroundColor, 
-          borderRadius: BorderRadius.circular(12), 
-        ),
-        padding: const EdgeInsets.all(16), 
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: AppStyles.primaryColor),
-            const SizedBox(height: 16),
-            Text(
-              name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppStyles.primaryColor,
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // Una tarjeta simple para las reseñas
 class _ReviewCard extends StatelessWidget {

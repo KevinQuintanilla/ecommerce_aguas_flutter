@@ -5,9 +5,8 @@ import '../services/producto_service.dart';
 import '../utils/app_styles.dart';
 import '../providers/categoria_provider.dart';
 import 'detalle_producto_screen.dart';
-import '../widgets/web_header.dart'; // <-- 1. Importa Header
-import '../widgets/web_footer.dart'; // <-- 2. Importa Footer
-import '../widgets/producto_card.dart'; // <-- 3. Importa la tarjeta
+import '../widgets/producto_card.dart';
+import '../widgets/web_page_layout.dart';
 
 class WebProductosScreen extends StatefulWidget {
   const WebProductosScreen({super.key});
@@ -48,67 +47,54 @@ class _WebProductosScreenState extends State<WebProductosScreen> {
     final double screenWidth = MediaQuery.of(context).size.width;
     final int columnCount = _calculateCrossAxisCount(screenWidth);
 
-    return Scaffold(
+    // --- 2. REEMPLAZA EL WIDGET BUILD ---
+    return WebPageLayout(
+      selectedIndex: 1,
       backgroundColor: AppStyles.backgroundColor, // Fondo gris
-      body: CustomScrollView( // Usamos CustomScrollView para los filtros
-        slivers: [
-          // 1. Header (No es un sliver, pero lo ponemos primero)
-          const SliverToBoxAdapter(child: WebHeader(selectedIndex: 1)),
-
-          // 2. Título de la página
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(AppStyles.largePadding),
-              child: Text(
-                'Nuestros Productos',
-                style: AppStyles.headingStyle.copyWith(
-                  fontSize: 36,
-                  color: AppStyles.primaryColor,
-                ),
-                textAlign: TextAlign.center,
+      body: Column(
+        children: [
+          // Título de la página
+          Padding(
+            padding: const EdgeInsets.all(AppStyles.largePadding),
+            child: Text(
+              'Nuestros Productos',
+              style: AppStyles.headingStyle.copyWith(
+                fontSize: 36,
+                color: AppStyles.primaryColor,
               ),
-            ),
-          ),
-
-          // 3. Barra de Filtros (¡LA HACEMOS "PEGADIZA"!)
-          SliverPersistentHeader(
-            delegate: _FiltrosSliverDelegate(
-              child: _buildFiltrosCategorias(context),
-            ),
-            pinned: true, // <-- La magia
-          ),
-
-          // 4. Contenido (Grid de productos)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(AppStyles.largePadding),
-              child: Consumer<CategoriaProvider>(
-                builder: (context, categoriaProvider, child) {
-                  _productosFuture = _cargarProductos(
-                      categoriaId: categoriaProvider.categoriaSeleccionadaId);
-                  
-                  return FutureBuilder<List<Producto>>(
-                    future: _productosFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return _buildCargando(columnCount);
-                      }
-                      if (snapshot.hasError) {
-                        return _buildError(snapshot.error.toString());
-                      }
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return _buildVacio();
-                      }
-                      return _buildProductosGrid(snapshot.data!, columnCount);
-                    },
-                  );
-                },
-              ),
+              textAlign: TextAlign.center,
             ),
           ),
           
-          // 5. Footer
-          const SliverToBoxAdapter(child: WebFooter()),
+          // Barra de Filtros
+          _buildFiltrosCategorias(context),
+
+          // Contenido (Grid de productos)
+          Padding(
+            padding: const EdgeInsets.all(AppStyles.largePadding),
+            child: Consumer<CategoriaProvider>(
+              builder: (context, categoriaProvider, child) {
+                _productosFuture = _cargarProductos(
+                    categoriaId: categoriaProvider.categoriaSeleccionadaId);
+                
+                return FutureBuilder<List<Producto>>(
+                  future: _productosFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return _buildCargando(columnCount);
+                    }
+                    if (snapshot.hasError) {
+                      return _buildError(snapshot.error.toString());
+                    }
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return _buildVacio();
+                    }
+                    return _buildProductosGrid(snapshot.data!, columnCount);
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -226,24 +212,6 @@ class _WebProductosScreenState extends State<WebProductosScreen> {
 
   Widget _buildVacio() {
     return Center( /* (Tu widget vacío) */ );
-  }
-}
-
-// --- CLASE DE AYUDA PARA LA BARRA DE FILTROS "PEGADIZA" ---
-class _FiltrosSliverDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  _FiltrosSliverDelegate({required this.child});
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Material(elevation: 2.0, child: child);
-  }
-  @override
-  double get maxExtent => 60.0;
-  @override
-  double get minExtent => 60.0;
-  @override
-  bool shouldRebuild(_FiltrosSliverDelegate oldDelegate) {
-    return child != oldDelegate.child;
   }
 }
 

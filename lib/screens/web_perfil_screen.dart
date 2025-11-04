@@ -4,10 +4,7 @@ import '../models/usuario.dart';
 import '../providers/auth_provider.dart';
 import '../utils/app_styles.dart';
 import '../widgets/responsive_layout.dart';
-import '../widgets/web_header.dart';
-import '../widgets/web_footer.dart';
-
-// Importamos las pantallas a las que vamos a navegar
+import '../widgets/web_page_layout.dart';
 import 'historial_pedidos_screen.dart';
 import 'direcciones_screen.dart';
 import 'configuracion_screen.dart';
@@ -19,50 +16,33 @@ class WebPerfilScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Obtenemos el AuthProvider
     final authProvider = Provider.of<AuthProvider>(context);
-
-    return Scaffold(
-      backgroundColor: AppStyles.backgroundColor, // Fondo gris pálido
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 2. Muestra el Header
-            const WebHeader(selectedIndex: 3),
-
-            // 3. Contenido principal centrado
-            ResponsiveLayout(
-              maxWidth: 1000,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: AppStyles.largePadding,
-                    horizontal: AppStyles.defaultPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Título de la página
-                    Text(
-                      'Mi Cuenta',
-                      style: AppStyles.headingStyle.copyWith(
-                        fontSize: 36,
-                        color: AppStyles.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: AppStyles.mediumPadding),
-
-                    // 4. Lógica de autenticación (igual que en mobile)
-                    if (authProvider.estaAutenticado)
-                      _buildWebProfileContent(context, authProvider)
-                    else
-                      _buildWebLoginPrompt(context),
-                  ],
+    return WebPageLayout(
+      selectedIndex: 3,
+      backgroundColor: AppStyles.backgroundColor, 
+      body: ResponsiveLayout(
+        maxWidth: 1000,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              vertical: AppStyles.largePadding,
+              horizontal: AppStyles.defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Mi Cuenta',
+                style: AppStyles.headingStyle.copyWith(
+                  fontSize: 36,
+                  color: AppStyles.primaryColor,
                 ),
               ),
-            ),
-
-            // 5. Muestra el Footer
-            const WebFooter(),
-          ],
+              const SizedBox(height: AppStyles.mediumPadding),
+              if (authProvider.estaAutenticado)
+                _buildWebProfileContent(context, authProvider)
+              else
+                _buildWebLoginPrompt(context),
+            ],
+          ),
         ),
       ),
     );
