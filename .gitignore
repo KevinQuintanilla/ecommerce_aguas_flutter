@@ -1,0 +1,27 @@
+# ==== Node.js (Backend) ====
+# Ignora las dependencias (jamás subir esto)
+/backend/node_modules
+# Ignora el archivo de variables de entorno (¡Contiene contraseñas!)
+/backend/.env
+# Logs de NPM
+/backend/npm-debug.log*
+/backend/yarn-debug.log*
+/backend/yarn-error.log*
+
+# ==== Flutter (Root) ====
+# Archivos de build y caché
+/build/
+/.dart_tool/
+/.flutter-plugins
+/.flutter-plugins-dependencies
+
+# Archivos del IDE (VS Code, Android Studio)
+/.idea/
+/.vscode/
+*.iml
+*.metadata
+*.lock
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
