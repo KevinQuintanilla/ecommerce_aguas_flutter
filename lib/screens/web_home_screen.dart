@@ -7,6 +7,7 @@ import '../widgets/producto_card.dart';
 import '../widgets/web_header.dart';
 import '../widgets/web_footer.dart';
 import '../providers/navigation_provider.dart';
+import '../utils/constants.dart';
 
 const List<Map<String, dynamic>> webCategories = [
   {'name': 'Agua Purificada', 'icon': Icons.water_drop},
@@ -36,8 +37,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
   Future<void> _loadData() async {
     try {
       // Cargamos los 3 productos destacados
-      final allProducts = await _productoService.obtenerProductos();
-      _featuredProducts = allProducts.take(3).toList();
+      _featuredProducts = await _productoService.obtenerProductosDestacados();
     } catch (e) {
       print('Error al cargar productos web: $e');
     }
@@ -64,50 +64,37 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
       ),
     );
   }
-
-  // --- 2. SECCIÓN "HERO" (EL BANNER AZUL) ---
+//banner 
   Widget _buildHeroSection(BuildContext context) {
-    return Container(
-      color: AppStyles.primaryColor,
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 80),
-      child: Column(
-        children: [
-          const Text(
-            'Aguas de Lourdes',
-            style: TextStyle(
-              fontSize: 52,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Pureza desde 1937',
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () {
-              Provider.of<NavigationProvider>(context, listen: false)
-                  .goToProducts();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppStyles.accentColor,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-              textStyle:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            child: const Text('Comprar ahora'),
-          ),
-        ],
-      ),
-    );
-  }
+  return Container(
+    width: double.infinity,
+    color: AppStyles.backgroundColor, 
+    child: Image.network(
+      '$kApiBaseUrl/images/other/banner-300x132.webp',
+      fit: BoxFit.cover, 
+
+      // (Opcional) Muestra un 'Cargando...'
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          height: 250, // Una altura temporal mientras carga
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(),
+        );
+      },
+      
+      // (Opcional) Muestra un error si no la encuentra
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          height: 250,
+          alignment: Alignment.center,
+          color: AppStyles.borderColor,
+          child: const Icon(Icons.error_outline, color: AppStyles.errorColor),
+        );
+      },
+    ),
+  );
+}
 
   // --- 3. SECCIÓN CARRUSEL (PLACEHOLDER) ---
   Widget _buildCarouselSection() {

@@ -349,7 +349,6 @@ app.post('/api/auth/register', (req, res) => { // <-- Se quita 'async'
 });
 
 // --- RUTAS DE PRODUCTOS Y CATEGORÍAS ---
-// (Estas rutas están perfectas, no se tocan)
 app.get('/api', (req, res) => {
   res.json({ 
     message: 'API Agua de Lourdes funcionando!',
@@ -389,6 +388,30 @@ app.get('/api/productos', (req, res) => {
     res.json(results);
   });
 });
+app.get('/api/productos/destacados', (req, res) => {
+  const query = `
+    SELECT 
+      p.*, 
+      c.nombre as categoria_nombre,
+      COALESCE(AVG(r.puntuacion), 0) as avg_rating
+    FROM productos p
+    LEFT JOIN categorias c ON p.categoria_id = c.categoria_id
+    LEFT JOIN reseñas r ON p.producto_id = r.producto_id
+    WHERE p.activo = 1
+    GROUP BY p.producto_id
+    ORDER BY avg_rating DESC
+    LIMIT 3
+  `;
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error obteniendo productos destacados:', err);
+      return res.status(500).json({ error: 'Error en la base de datos' });
+    }
+    res.json(results);
+  });
+});
+
+// --- RUTA RESTAURADA (Para la pantalla "Detalle de Producto") ---
 app.get('/api/productos/:id', (req, res) => {
   const productId = req.params.id;
   const productQuery = 'SELECT * FROM productos WHERE producto_id = ? AND activo = 1';
@@ -415,11 +438,13 @@ app.get('/api/productos/:id', (req, res) => {
       }
       res.json({
         ...producto,
-        resenas: reseñasResults
+        resenas: reseñasResults // (usamos "resenas" con 'n' que arreglamos antes)
       });
     });
   });
 });
+// --- FIN DE LA RUTA RESTAURADA ---
+
 app.get('/api/categorias', (req, res) => {
   const query = 'SELECT * FROM categorias WHERE activa = 1';
   connection.query(query, (err, results) => {

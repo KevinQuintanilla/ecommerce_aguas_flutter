@@ -59,6 +59,21 @@ class ProductoService {
       throw Exception('Error de conexión: $e');
     }
   }
+  // Obtener productos destacados para el carrusel
+  Future<List<Producto>> obtenerProductosDestacados() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/productos/destacados'));
+      
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Producto.fromJson(json)).toList();
+      } else {
+        throw Exception('Error al cargar productos destacados: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
+  }
   // Enviar una nueva reseña
   Future<Map<String, dynamic>> enviarResena({
     required int productoId,
