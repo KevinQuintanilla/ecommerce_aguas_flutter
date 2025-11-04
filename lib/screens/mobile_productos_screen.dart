@@ -11,14 +11,14 @@ import '../providers/carrito_provider.dart';
 import 'detalle_producto_screen.dart'; 
 // --- FIN DE LA CORRECCIÓN ---
 
-class ProductosScreen extends StatefulWidget {
-  const ProductosScreen({super.key});
+class MobileProductosScreen extends StatefulWidget {
+  const MobileProductosScreen({super.key});
 
   @override
-  State<ProductosScreen> createState() => _ProductosScreenState();
+  State<MobileProductosScreen> createState() => _MobileProductosScreenState();
 }
 
-class _ProductosScreenState extends State<ProductosScreen> {
+class _MobileProductosScreenState extends State<MobileProductosScreen> {
   final ProductoService _productoService = ProductoService();
   Future<List<Producto>>? _productosFuture;
 

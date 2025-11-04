@@ -8,8 +8,8 @@ import 'direcciones_screen.dart';
 import 'configuracion_screen.dart';
 import '../widgets/responsive_layout.dart';
 
-class PerfilScreen extends StatelessWidget {
-  const PerfilScreen({super.key});
+class MobilePerfilScreen extends StatelessWidget {
+  const MobilePerfilScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

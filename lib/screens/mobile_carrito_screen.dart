@@ -7,8 +7,8 @@ import '../models/carrito_item.dart';
 import 'checkout_screen.dart';
 import '../widgets/responsive_layout.dart';
 
-class CarritoScreen extends StatelessWidget {
-  const CarritoScreen({super.key});
+class MobileCarritoScreen extends StatelessWidget {
+  const MobileCarritoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

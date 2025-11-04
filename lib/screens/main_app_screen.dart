@@ -4,36 +4,68 @@ import '../providers/navigation_provider.dart';
 import '../providers/carrito_provider.dart';
 import '../utils/app_styles.dart';
 import 'home_screen.dart';
-import 'productos_screen.dart';
-import 'carrito_screen.dart';
-import 'perfil_screen.dart';
-
+import 'mobile_productos_screen.dart';
+import 'web_productos_screen.dart';
+import 'mobile_carrito_screen.dart';
+import 'mobile_perfil_screen.dart';
+import 'web_home_screen.dart';
+import 'web_carrito_screen.dart';
+import 'web_perfil_screen.dart';
 class MainAppScreen extends StatelessWidget {
   const MainAppScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final navigationProvider = Provider.of<NavigationProvider>(context);
-
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        
+        // El mismo punto de quiebre
+        if (constraints.maxWidth > 700) {
+          return _buildCurrentScreen(context, isWeb: true);
+          
+        } else {
+          return _buildMobileLayout(context);
+        }
+      },
+    );
+  }
+  Widget _buildMobileLayout(BuildContext context) {
     return Scaffold(
       backgroundColor: AppStyles.backgroundColor,
-      body: _buildCurrentScreen(navigationProvider.currentIndex),
+      body: _buildCurrentScreen(context, isWeb: false),
       bottomNavigationBar: _buildBottomNavigationBar(context),
     );
   }
-
-  Widget _buildCurrentScreen(int currentIndex) {
-    switch (currentIndex) {
-      case 0:
-        return const HomeScreen();
-      case 1:
-        return const ProductosScreen();
-      case 2:
-        return const CarritoScreen();
-      case 3:
-        return const PerfilScreen();
-      default:
-        return const HomeScreen();
+  Widget _buildCurrentScreen(BuildContext context, {required bool isWeb}) {
+    final navigationProvider = Provider.of<NavigationProvider>(context);
+    final currentIndex = navigationProvider.currentIndex;
+    if (isWeb) {
+      switch (currentIndex) {
+        case 0:
+          return const WebHomeScreen(); // <-- Pantalla especial web
+        case 1:
+          return const WebProductosScreen();
+        case 2:
+          return const WebCarritoScreen(); // TODO: Crear WebCarritoScreen
+        case 3:
+          return const WebPerfilScreen(); // TODO: Crear WebPerfilScreen
+        default:
+          return const WebHomeScreen();
+      }
+    } 
+    else {
+      switch (currentIndex) {
+        case 0:
+          return const HomeScreen(); 
+        case 1:
+          return const MobileProductosScreen();
+        case 2:
+          return const MobileCarritoScreen();
+        case 3:
+          return const MobilePerfilScreen();
+        default:
+          return const HomeScreen();
+      }
     }
   }
 

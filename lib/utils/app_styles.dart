@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
 class AppStyles {
-  // Colores basados en Aguas Lourdes - Azul y Blanco clásico
-  static const Color primaryColor = Color(0xFF1E88E5);    // Azul confianza
-  static const Color accentColor = Color(0xFF42A5F5);     // Azul claro
-  static const Color darkColor = Color(0xFF1565C0);       // Azul oscuro
+  // --- PALETA ACTUALIZADA ---
+  // Ahora la paleta "principal" es la de la web.
+  static const Color primaryColor = Color(0xFF0D47A1);    // Azul oscuro (El antiguo webPrimaryDark)
+  static const Color accentColor = Color(0xFFFBC02D);     // Amarillo/Dorado (El antiguo webAccentYellow)
+  static const Color darkColor = Color(0xFF0D47A1);       // Azul oscuro
   static const Color textColor = Color(0xFF2C3E50);       // Azul grisáceo oscuro
   static const Color lightTextColor = Color(0xFF7F8C8D);  // Gris texto secundario
-  static const Color backgroundColor = Color(0xFFF8F9FA); // Fondo muy claro
+  static const Color backgroundColor = Color(0xFFF1F5F9); // Gris pálido (El antiguo webMutedGray)
   static const Color cardColor = Colors.white;            // Blanco puro
   static const Color borderColor = Color(0xFFE0E0E0);     // Gris bordes
+  // --- FIN DE LA ACTUALIZACIÓN ---
+  
+  // (Las variables "web..." que añadimos antes ya no son necesarias y se han eliminado)
 
-  // Colores de estado (FALTANTES - agregados ahora)
+  // Colores de estado
   static const Color successColor = Color(0xFF4CAF50);    // Verde éxito
   static const Color warningColor = Color(0xFFFF9800);    // Naranja advertencia
   static const Color errorColor = Color(0xFFF44336);      // Rojo error
