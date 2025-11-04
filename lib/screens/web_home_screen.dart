@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:video_player/video_player.dart'; // <-- ELIMINADO
 import 'package:provider/provider.dart';
 import '../models/producto.dart';
 import '../services/producto_service.dart';
@@ -15,6 +16,38 @@ const List<Map<String, dynamic>> webCategories = [
   {'name': 'Especiales', 'icon': Icons.bolt},
   {'name': 'Merchandising', 'icon': Icons.bolt},
 ];
+final List<Map<String, String>> productTabsData = [
+  {
+    "tab": "355 ML",
+    "title": "AGUA MINERAL 355 ML",
+    "desc": "PRESENTACIÓN CON TAPARROSCA DE UNA MEDIDA REAL, PARA LLEVARLA A TODOS LADOS Y PARA ACOMPAÑAR LOS ANTOJITOS DEL DÍA, ASÍ COMO EN NUESTRA VIDA NOCTURNA.",
+    "image": "/images/agua/agua-355ml.webp"
+  },
+  {
+    "tab": "600 ML",
+    "title": "AGUA MINERAL 600 ML",
+    "desc": "PRESENTACIÓN CON TAPARROSCA DE UN TAMAÑO PRECISO PARA SER EL ACOMPAÑANTE DURANTE TODO TU DÍA. PERMITIENDO HIDRATARTE SIEMPRE CON EL MEJOR SABOR DE UN AGUA MINERAL.",
+    "image": "/images/agua/agua-600ml.webp"
+  },
+  {
+    "tab": "1.5 LTS",
+    "title": "AGUA MINERAL 1.5 LTS",
+    "desc": "LA PRESENTACIÓN IDEAL PARA SER UN BUEN MEZCLADOR EN NUESTROS EVENTOS SOCIALES QUE, POR SU TAMAÑO, NOS INVITA A COMPARTIRLA CON NUESTROS SERES MÁS QUERIDOS Y CERCANOS.",
+    "image": "/images/agua/agua-1.5L.webp" 
+  },
+  {
+    "tab": "200 ML",
+    "title": "AGUA MINERAL 200 ML",
+    "desc": "EXCELENTE TAMAÑO PARA DARLE UN TOQUE FRESCO A TU DÍA CON LA PRESENTACIÓN EN VIDRIO, INICIANDO UNA RELACIÓN CÍCLICA Y RETORNABLE.",
+    "image": "/images/agua/agua-200ml.webp" 
+  },
+  {
+    "tab": "340 ML",
+    "title": "AGUA MINERAL 340 ML",
+    "desc": "PRESENTACIÓN RETORNABLE DE TAMAÑO IDEAL PARA ACOMPAÑAR LOS SABORES EXQUISITOS DE LA COMIDA CASERA Y DEL AMBIENTE DE FIESTA QUE NOS CARACTERIZA A LOS MEXICANOS.",
+    "image": "/images/agua/agua-340ml.webp" 
+  },
+];
 
 class WebHomeScreen extends StatefulWidget {
   const WebHomeScreen({super.key});
@@ -22,21 +55,26 @@ class WebHomeScreen extends StatefulWidget {
   @override
   State<WebHomeScreen> createState() => _WebHomeScreenState();
 }
-
-class _WebHomeScreenState extends State<WebHomeScreen> {
+class _WebHomeScreenState extends State<WebHomeScreen> with SingleTickerProviderStateMixin {
   final ProductoService _productoService = ProductoService();
   List<Producto> _featuredProducts = [];
   bool _isLoading = true;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 5, vsync: this);
     _loadData();
+  }
+  @override
+  void dispose() {
+    _tabController.dispose(); 
+    super.dispose();
   }
 
   Future<void> _loadData() async {
     try {
-      // Cargamos los 3 productos destacados
       _featuredProducts = await _productoService.obtenerProductosDestacados();
     } catch (e) {
       print('Error al cargar productos web: $e');
@@ -46,16 +84,14 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos el Scaffold para tener una estructura base
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView( // El SingleChildScrollView es el padre de todo
+      body: SingleChildScrollView( 
         child: Column(
           children: [
-            const WebHeader(selectedIndex: 0), // <-- 1. El Header AHORA ESTÁ AQUÍ
+            const WebHeader(selectedIndex: 0), 
             _buildHeroSection(context), 
             _buildCarouselSection(), 
-            _buildCategoriesSection(context),
             _buildFeaturedProductsSection(context),
             _buildReviewsSection(),
             const WebFooter(),
@@ -64,6 +100,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
       ),
     );
   }
+
 //banner 
   Widget _buildHeroSection(BuildContext context) {
   return Container(
@@ -73,17 +110,17 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
       '$kApiBaseUrl/images/other/banner-300x132.webp',
       fit: BoxFit.cover, 
 
-      // (Opcional) Muestra un 'Cargando...'
+      // Muestra un 'Cargando...'
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
         return Container(
-          height: 250, // Una altura temporal mientras carga
+          height: 250, 
           alignment: Alignment.center,
           child: const CircularProgressIndicator(),
         );
       },
       
-      // (Opcional) Muestra un error si no la encuentra
+      // Muestra un error si no la encuentra
       errorBuilder: (context, error, stackTrace) {
         return Container(
           height: 250,
@@ -96,65 +133,47 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
   );
 }
 
-  // --- 3. SECCIÓN CARRUSEL (PLACEHOLDER) ---
+  // --- SECCIÓN CARRUSEL (PLACEHOLDER) ---
   Widget _buildCarouselSection() {
-    // Placeholder para el carrusel
     return Container(
-      height: 400,
-      color: Colors.black,
-      child: const Center(
-        child: Text(
-          'Aquí va el Carrusel (Carousel.jsx)',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-    );
-  }
-
-  // --- 4. SECCIÓN CATEGORÍAS ---
-  Widget _buildCategoriesSection(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 40),
+      color: AppStyles.primaryColor, // Fondo azul oscuro
+      padding: const EdgeInsets.only(top: 24.0),
       child: Column(
         children: [
-          const Text(
-            'Explora Nuestras Categorías',
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: AppStyles.primaryColor,
+          Center(
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              indicatorColor: AppStyles.accentColor, // Línea amarilla
+              indicatorWeight: 4.0,
+              labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              unselectedLabelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.normal, color: Colors.white70),
+              tabs: productTabsData.map((p) => Tab(text: p['tab'])).toList(),
             ),
           ),
-          const SizedBox(height: 40),
-          GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4, // 4 columnas como en el diseño web
-              crossAxisSpacing: 24,
-              mainAxisSpacing: 24,
-              childAspectRatio: 1.0, // Tarjetas cuadradas
+
+          Container(
+            height: 450, 
+            child: TabBarView(
+              controller: _tabController,
+              children: productTabsData.map((p) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 120.0, vertical: 30.0),
+                  child: _ProductTabContent(
+                    title: p['title']!,
+                    description: p['desc']!,
+                    imageUrl: p['image']!,
+                  ),
+                );
+              }).toList(),
             ),
-            itemCount: webCategories.length,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemBuilder: (context, index) {
-              final category = webCategories[index];
-              return _CategoryCard(
-                icon: category['icon'],
-                name: category['name'],
-                onTap: () {
-                  Provider.of<NavigationProvider>(context, listen: false)
-                      .goToProducts();
-                },
-              );
-            },
           ),
         ],
       ),
     );
   }
 
-  // --- 5. SECCIÓN PRODUCTOS DESTACADOS ---
+  // --- SECCIÓN PRODUCTOS DESTACADOS ---
   Widget _buildFeaturedProductsSection(BuildContext context) {
     return Container(
       color: AppStyles.backgroundColor, // Fondo gris pálido
@@ -180,16 +199,15 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
           else
             GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3, // 3 columnas como en el diseño web
+                crossAxisCount: 3, 
                 crossAxisSpacing: 24,
                 mainAxisSpacing: 24,
-                childAspectRatio: 0.70, // Relación de aspecto de la tarjeta
+                childAspectRatio: 0.70,
               ),
               itemCount: _featuredProducts.length,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
-                // ¡Usamos el ProductoCard que ya tenías!
                 return ProductoCard(producto: _featuredProducts[index]);
               },
             ),
@@ -236,9 +254,13 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
             ),
           ),
           const SizedBox(height: 40),
-          Row(
-            // Replicamos el layout de 3 columnas
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          GridView.count(
+            crossAxisCount: 3, // 3 columnas
+            crossAxisSpacing: 24,
+            mainAxisSpacing: 24,
+            childAspectRatio: 1.5, // Ajusta esto (ancho/alto)
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             children: [
               _ReviewCard(
                   nombre: 'Ana Pérez',
@@ -342,6 +364,65 @@ class _ReviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text('"$comentario"', style: TextStyle(color: Colors.grey[700])),
+        ],
+      ),
+    );
+  }
+}
+class _ProductTabContent extends StatelessWidget {
+  final String title;
+  final String description;
+  final String imageUrl;
+
+  const _ProductTabContent({
+    required this.title,
+    required this.description,
+    required this.imageUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppStyles.accentColor, // Fondo amarillo
+      padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 40),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center, // Centra el contenido
+        children: [
+          // Columna 1: Imagen (con tamaño fijo)
+          Image.network(
+            '$kApiBaseUrl$imageUrl', // Carga desde el backend
+            fit: BoxFit.contain,
+            height: 300, // Altura fija como en el diseño
+          ),
+
+          const SizedBox(width: 60), // Más espacio
+          
+          // Columna 2: Texto (Este sí se expande)
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // Centra verticalmente el texto
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black87,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

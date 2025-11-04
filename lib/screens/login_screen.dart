@@ -5,6 +5,7 @@ import 'registro_screen.dart';
 import '../utils/app_styles.dart';
 import 'main_app_screen.dart';
 import '../widgets/responsive_layout.dart';
+import '../utils/constants.dart'; // Asegúrate de tener kApiBaseUrl aquí para el logo
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,76 +20,69 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  // Colores basados en tu marca
-  final Color _primaryColor = const Color(0xFF1E88E5); // Azul principal
-  final Color _darkColor = const Color(0xFF0D47A1); // Azul oscuro
-  final Color _textColor = const Color(0xFF37474F); // Gris oscuro para texto
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppStyles.backgroundColor, // Fondo gris pálido
       body: SafeArea(
-        child: ResponsiveLayout( // <-- 1. ENVUELVE EL CONTENIDO
-          child: SingleChildScrollView( // <-- 2. TU WIDGET ORIGINAL
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 40),
-                _buildLoginForm(authProvider),
-                const SizedBox(height: 30),
-                _buildRegisterSection(),
-              ],
+        child: Stack( // Usamos Stack para el contenido principal y el footer
+          children: [
+            // Contenido principal (centrado vertical y horizontalmente)
+            Align(
+              alignment: Alignment.center,
+              child: ResponsiveLayout(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0), // Padding arriba/abajo para no chocar con el footer
+                  child: Container(
+                    padding: const EdgeInsets.all(AppStyles.largePadding),
+                    decoration: AppStyles.cardDecoration, // Tarjeta blanca
+                    constraints: const BoxConstraints(maxWidth: 450), // Ancho máximo de la tarjeta
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // Que la columna ocupe el mínimo espacio
+                      children: [
+                        _buildLogo(), // Logo
+                        const SizedBox(height: 40),
+                        _buildLoginForm(authProvider), // Formulario de login
+                        const SizedBox(height: 30),
+                        _buildRegisterSection(), // Sección de registro
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+            
+            // Footer (políticas) abajo del todo
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _buildPolicyFooter(),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  // --- NUEVA FUNCIÓN PARA EL LOGO (igual a tu imagen) ---
+  Widget _buildLogo() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(
-              Icons.local_drink,
-              size: 40,
-              color: _primaryColor,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Aguas e Jourões',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: _darkColor,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
+        Image.network(
+          '$kApiBaseUrl/images/other/Logotipo.png', // Asume que tienes un logo aquí
+          height: 60, // Ajusta la altura si es necesario
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(Icons.broken_image, color: AppStyles.errorColor),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 20),
         Text(
-          'Descubre algo naturalmente mineral',
+          'Iniciar Sesión', // Este texto reemplaza "Selecciona cómo quieres iniciar sesión"
           style: TextStyle(
-            fontSize: 16,
-            color: _textColor.withOpacity(0.8),
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'EL SABOR DE SIEMPRE • DESDE 1937',
-          style: TextStyle(
-            fontSize: 12,
-            color: _textColor.withOpacity(0.6),
-            fontWeight: FontWeight.w500,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppStyles.darkColor,
           ),
         ),
       ],
@@ -104,16 +98,16 @@ class _LoginScreenState extends State<LoginScreen> {
           TextFormField(
             controller: _emailController,
             decoration: InputDecoration(
-              labelText: 'Email',
-              labelStyle: TextStyle(color: _textColor),
-              prefixIcon: Icon(Icons.email, color: _primaryColor),
+              labelText: 'Correo electrónico', // Cambiado a "Correo electrónico"
+              labelStyle: TextStyle(color: AppStyles.textColor),
+              prefixIcon: Icon(Icons.email, color: AppStyles.primaryColor),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor),
+                borderSide: BorderSide(color: AppStyles.primaryColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor, width: 2),
+                borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
               ),
             ),
             keyboardType: TextInputType.emailAddress,
@@ -135,12 +129,12 @@ class _LoginScreenState extends State<LoginScreen> {
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: 'Contraseña',
-              labelStyle: TextStyle(color: _textColor),
-              prefixIcon: Icon(Icons.lock, color: _primaryColor),
+              labelStyle: TextStyle(color: AppStyles.textColor),
+              prefixIcon: Icon(Icons.lock, color: AppStyles.primaryColor),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: _primaryColor,
+                  color: AppStyles.primaryColor,
                 ),
                 onPressed: () {
                   setState(() {
@@ -150,11 +144,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor),
+                borderSide: BorderSide(color: AppStyles.primaryColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor, width: 2),
+                borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
               ),
             ),
             validator: (value) {
@@ -214,7 +208,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
 
                         if (success && context.mounted) {
-                          // FORZAR LA NAVEGACIÓN EXPLÍCITA
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(
                                 builder: (context) => const MainAppScreen()),
@@ -222,17 +215,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text('Login exitoso'),
-                              backgroundColor: AppStyles.successColor,
-                              duration: const Duration(seconds: 2),
-                            ),
+                            AppStyles.successSnackBar('Login exitoso'),
                           );
                         }
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryColor,
+                backgroundColor: AppStyles.primaryColor,
                 foregroundColor: Colors.white,
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -260,6 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // --- SECCIÓN DE REGISTRO MÁS SIMPLE (solo un botón) ---
   Widget _buildRegisterSection() {
     return Column(
       children: [
@@ -269,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
           '¿No tienes una cuenta?',
           style: TextStyle(
             fontSize: 16,
-            color: _textColor.withOpacity(0.7),
+            color: AppStyles.textColor.withOpacity(0.7),
           ),
         ),
         const SizedBox(height: 16),
@@ -286,8 +276,8 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             },
             style: OutlinedButton.styleFrom(
-              foregroundColor: _primaryColor,
-              side: BorderSide(color: _primaryColor, width: 2),
+              foregroundColor: AppStyles.primaryColor,
+              side: BorderSide(color: AppStyles.primaryColor, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -300,6 +290,44 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // --- NUEVA FUNCIÓN PARA EL FOOTER DE POLÍTICAS ---
+  Widget _buildPolicyFooter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
+      width: double.infinity,
+      color: Colors.transparent, // Transparente, se ve el fondo gris
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextButton(
+            onPressed: () {
+              // TODO: Implementar navegación a Política de privacidad
+              print('Navegar a Política de privacidad');
+            },
+            child: Text(
+              'Política de privacidad',
+              style: TextStyle(color: AppStyles.textColor.withOpacity(0.8), fontSize: 13),
+            ),
+          ),
+          Text(
+            ' | ',
+            style: TextStyle(color: AppStyles.textColor.withOpacity(0.5), fontSize: 13),
+          ),
+          TextButton(
+            onPressed: () {
+              // TODO: Implementar navegación a Términos del servicio
+              print('Navegar a Términos del servicio');
+            },
+            child: Text(
+              'Términos del servicio',
+              style: TextStyle(color: AppStyles.textColor.withOpacity(0.8), fontSize: 13),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

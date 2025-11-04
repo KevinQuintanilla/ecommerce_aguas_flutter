@@ -4,7 +4,8 @@ import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 import '../utils/app_styles.dart';
 import 'main_app_screen.dart';
-import  '../widgets/responsive_layout.dart';
+import '../widgets/responsive_layout.dart';
+import '../utils/constants.dart'; // Asegúrate de tener kApiBaseUrl aquí para el logo
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -24,72 +25,69 @@ class _RegistroScreenState extends State<RegistroScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  final Color _primaryColor = const Color(0xFF1E88E5);
-  final Color _darkColor = const Color(0xFF0D47A1);
-  final Color _textColor = const Color(0xFF37474F);
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: _primaryColor),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
+      backgroundColor: AppStyles.backgroundColor, // Fondo gris pálido
       body: SafeArea(
-        child: ResponsiveLayout(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 30),
-              _buildRegisterForm(authProvider),
-            ],
-          ),
-        ),
-      ),
-      )
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+        child: Stack( // Usamos Stack para el contenido principal y el footer
           children: [
-            Icon(
-              Icons.local_drink,
-              size: 32,
-              color: _primaryColor,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Crear Cuenta',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: _darkColor,
+            // Contenido principal (centrado vertical y horizontalmente)
+            Align(
+              alignment: Alignment.center,
+              child: ResponsiveLayout(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0), // Padding arriba/abajo
+                  child: Container(
+                    padding: const EdgeInsets.all(AppStyles.largePadding),
+                    decoration: AppStyles.cardDecoration, // Tarjeta blanca
+                    constraints: const BoxConstraints(maxWidth: 450), // Ancho máximo de la tarjeta
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // Que la columna ocupe el mínimo espacio
+                      children: [
+                        _buildLogo(), // Logo
+                        const SizedBox(height: 40),
+                        _buildRegisterForm(authProvider), // Formulario de registro
+                        const SizedBox(height: 20),
+                        _buildLoginLink(), // Enlace a Login
+                      ],
+                    ),
+                  ),
+                ),
               ),
+            ),
+            
+            // Footer (políticas) abajo del todo
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _buildPolicyFooter(),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+      ),
+    );
+  }
+
+  // --- NUEVA FUNCIÓN PARA EL LOGO (igual que en LoginScreen) ---
+  Widget _buildLogo() {
+    return Column(
+      children: [
+        Image.network(
+          '$kApiBaseUrl/images/other/Logotipo.png', // Tu logo
+          height: 60, // Ajusta la altura si es necesario
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(Icons.broken_image, color: AppStyles.errorColor),
+        ),
+        const SizedBox(height: 20),
         Text(
-          'Únete a la familia Aguas e Jourões',
+          'Crear Cuenta', // Título "Crear Cuenta"
           style: TextStyle(
-            fontSize: 16,
-            color: _textColor.withOpacity(0.7),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppStyles.darkColor,
           ),
         ),
       ],
@@ -109,14 +107,14 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   controller: _nombreController,
                   decoration: InputDecoration(
                     labelText: 'Nombre',
-                    labelStyle: TextStyle(color: _textColor),
-                    prefixIcon: Icon(Icons.person, color: _primaryColor),
+                    labelStyle: TextStyle(color: AppStyles.textColor),
+                    prefixIcon: Icon(Icons.person, color: AppStyles.primaryColor),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: _primaryColor, width: 2),
+                      borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
                     ),
                   ),
                   validator: (value) {
@@ -133,13 +131,13 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   controller: _apellidoController,
                   decoration: InputDecoration(
                     labelText: 'Apellido',
-                    labelStyle: TextStyle(color: _textColor),
+                    labelStyle: TextStyle(color: AppStyles.textColor),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: _primaryColor, width: 2),
+                      borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
                     ),
                   ),
                   validator: (value) {
@@ -159,23 +157,23 @@ class _RegistroScreenState extends State<RegistroScreen> {
             controller: _emailController,
             decoration: InputDecoration(
               labelText: 'Email',
-              labelStyle: TextStyle(color: _textColor),
-              prefixIcon: Icon(Icons.email, color: _primaryColor),
+              labelStyle: TextStyle(color: AppStyles.textColor),
+              prefixIcon: Icon(Icons.email, color: AppStyles.primaryColor),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor, width: 2),
+                borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
               ),
             ),
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Ingresa tu email';
+                return 'Por favor ingresa tu email';
               }
               if (!value.contains('@')) {
-                return 'Email inválido';
+                return 'Ingresa un email válido';
               }
               return null;
             },
@@ -187,14 +185,14 @@ class _RegistroScreenState extends State<RegistroScreen> {
             controller: _telefonoController,
             decoration: InputDecoration(
               labelText: 'Teléfono (opcional)',
-              labelStyle: TextStyle(color: _textColor),
-              prefixIcon: Icon(Icons.phone, color: _primaryColor),
+              labelStyle: TextStyle(color: AppStyles.textColor),
+              prefixIcon: Icon(Icons.phone, color: AppStyles.primaryColor),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor, width: 2),
+                borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
               ),
             ),
             keyboardType: TextInputType.phone,
@@ -207,12 +205,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: 'Contraseña',
-              labelStyle: TextStyle(color: _textColor),
-              prefixIcon: Icon(Icons.lock, color: _primaryColor),
+              labelStyle: TextStyle(color: AppStyles.textColor),
+              prefixIcon: Icon(Icons.lock, color: AppStyles.primaryColor),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: _primaryColor,
+                  color: AppStyles.primaryColor,
                 ),
                 onPressed: () {
                   setState(() {
@@ -225,15 +223,15 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor, width: 2),
+                borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
               ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Ingresa una contraseña';
+                return 'Por favor ingresa tu contraseña';
               }
               if (value.length < 6) {
-                return 'Mínimo 6 caracteres';
+                return 'La contraseña debe tener al menos 6 caracteres';
               }
               return null;
             },
@@ -246,14 +244,14 @@ class _RegistroScreenState extends State<RegistroScreen> {
             obscureText: _obscureConfirmPassword,
             decoration: InputDecoration(
               labelText: 'Confirmar Contraseña',
-              labelStyle: TextStyle(color: _textColor),
-              prefixIcon: Icon(Icons.lock_outline, color: _primaryColor),
+              labelStyle: TextStyle(color: AppStyles.textColor),
+              prefixIcon: Icon(Icons.lock_outline, color: AppStyles.primaryColor),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
                       ? Icons.visibility
                       : Icons.visibility_off,
-                  color: _primaryColor,
+                  color: AppStyles.primaryColor,
                 ),
                 onPressed: () {
                   setState(() {
@@ -266,12 +264,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: _primaryColor, width: 2),
+                borderSide: BorderSide(color: AppStyles.primaryColor, width: 2),
               ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Confirma tu contraseña';
+                return 'Por favor confirma tu contraseña';
               }
               if (value != _passwordController.text) {
                 return 'Las contraseñas no coinciden';
@@ -287,6 +285,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: Colors.red[50],
                 borderRadius: BorderRadius.circular(8),
@@ -309,8 +308,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
               ),
             ),
 
-          const SizedBox(height: 30),
-
           // Botón de Registro
           SizedBox(
             width: double.infinity,
@@ -331,25 +328,19 @@ class _RegistroScreenState extends State<RegistroScreen> {
                         );
 
                         if (success && context.mounted) {
-                          // FORZAR LA NAVEGACIÓN EXPLÍCITA
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(
                                 builder: (context) => const MainAppScreen()),
                             (route) => false,
                           );
-
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text('Registro exitoso'),
-                              backgroundColor: AppStyles.successColor,
-                              duration: const Duration(seconds: 2),
-                            ),
+                            AppStyles.successSnackBar('Registro exitoso'),
                           );
                         }
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryColor,
+                backgroundColor: AppStyles.primaryColor,
                 foregroundColor: Colors.white,
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -372,26 +363,63 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   : const Text('Crear Cuenta'),
             ),
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 20),
+  // --- NUEVA FUNCIÓN PARA EL ENLACE A LOGIN ---
+  Widget _buildLoginLink() {
+    return TextButton(
+      onPressed: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+        );
+      },
+      child: Text(
+        '¿Ya tienes cuenta? Inicia Sesión',
+        style: TextStyle(
+          color: AppStyles.primaryColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
 
-          // Enlace a Login
+  // --- FUNCIÓN PARA EL FOOTER DE POLÍTICAS (igual que en LoginScreen) ---
+  Widget _buildPolicyFooter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
+      width: double.infinity,
+      color: Colors.transparent, // Transparente, se ve el fondo gris
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
           TextButton(
             onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LoginScreen(),
-                ),
-              );
+              // TODO: Implementar navegación a Política de privacidad
+              print('Navegar a Política de privacidad');
             },
             child: Text(
-              '¿Ya tienes cuenta? Inicia Sesión',
-              style: TextStyle(
-                color: _primaryColor,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              'Política de privacidad',
+              style: TextStyle(color: AppStyles.textColor.withOpacity(0.8), fontSize: 13),
+            ),
+          ),
+          Text(
+            ' | ',
+            style: TextStyle(color: AppStyles.textColor.withOpacity(0.5), fontSize: 13),
+          ),
+          TextButton(
+            onPressed: () {
+              print('Navegar a Términos del servicio');
+            },
+            child: Text(
+              'Términos del servicio',
+              style: TextStyle(color: AppStyles.textColor.withOpacity(0.8), fontSize: 13),
             ),
           ),
         ],
