@@ -1,38 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../widgets/web_header.dart';
 import '../widgets/web_footer.dart';
 import '../widgets/responsive_layout.dart';
 import '../utils/app_styles.dart';
+import '../widgets/web_page_layout.dart'; // Importa el layout principal
 
 class FindUsScreen extends StatelessWidget {
   const FindUsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return const WebPageLayout(
+      selectedIndex: -1, // No es una pestaña principal
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 0:Inicio, 1:Tienda, 2:Nosotros, 3:Encuentranos
-            WebHeader(selectedIndex: 3), 
-            ResponsiveLayout(
-              maxWidth: 1000,
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 60, horizontal: 24),
-                child: _Content(),
-              ),
-            ),
-            WebFooter(),
-          ],
+      body: ResponsiveLayout(
+        maxWidth: 1000,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+          child: _Content(), // El contenido interactivo
         ),
       ),
     );
   }
 }
 
-class _Content extends StatelessWidget {
+// Convertido a StatefulWidget para manejar el mapa
+class _Content extends StatefulWidget {
   const _Content();
+  @override
+  State<_Content> createState() => _ContentState();
+}
+
+class _ContentState extends State<_Content> {
+  // Cámara inicial (Plaza de Armas, SLP)
+  static const CameraPosition _kInitialPosition = CameraPosition(
+    target: LatLng(22.1523, -100.9782),
+    zoom: 13.0,
+  );
+
+  // Marcadores (pines)
+  final Set<Marker> _markers = {
+    const Marker(
+      markerId: MarkerId('distribuidor_centro'),
+      position: LatLng(22.1523, -100.9782), 
+      infoWindow: InfoWindow(
+        title: 'Distribuidor Centro',
+        snippet: 'Av. Siempre Viva 123, Centro',
+      ),
+    ),
+    const Marker(
+      markerId: MarkerId('distribuidor_norte'),
+      position: LatLng(22.1650, -100.9850), 
+      infoWindow: InfoWindow(
+        title: 'Distribuidor Norte',
+        snippet: 'Calle Falsa 456, Col. Norte',
+      ),
+    ),
+    const Marker(
+      markerId: MarkerId('distribuidor_sur'),
+      position: LatLng(22.1410, -100.9710), 
+      infoWindow: InfoWindow(
+        title: 'Distribuidor Sur',
+        snippet: 'Blvd. de los Sueños Rotos 789, Sur',
+      ),
+    ),
+  };
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -42,6 +76,7 @@ class _Content extends StatelessWidget {
         const SizedBox(height: 16),
         Text("Siempre hay un punto de Aguas de Lourdes cerca de ti.", style: AppStyles.bodyTextStyle.copyWith(fontSize: 18, color: AppStyles.lightTextColor)),
         const SizedBox(height: 40),
+        
         // Layout de 2 columnas
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,33 +86,35 @@ class _Content extends StatelessWidget {
               flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children:[
+                children: [
                   Text("Distribuidores Autorizados", style: AppStyles.headingStyle.copyWith(fontSize: 24, color: AppStyles.primaryColor)),
-                  SizedBox(height: 24),
-                  _DistributorInfo(title: "Distribuidor Centro", address: "Av. Siempre Viva 123, Centro", icon: Icons.store_mall_directory),
-                  _DistributorInfo(title: "Distribuidor Norte", address: "Calle Falsa 456, Col. Norte", icon: Icons.store_mall_directory),
-                  _DistributorInfo(title: "Distribuidor Sur", address: "Blvd. de los Sueños Rotos 789, Sur", icon: Icons.store_mall_directory),
+                  const SizedBox(height: 24),
+                  const _DistributorInfo(title: "Distribuidor Centro", address: "Av. Siempre Viva 123, Centro", icon: Icons.store_mall_directory),
+                  const _DistributorInfo(title: "Distribuidor Norte", address: "Calle Falsa 456, Col. Norte", icon: Icons.store_mall_directory),
+                  const _DistributorInfo(title: "Distribuidor Sur", address: "Blvd. de los Sueños Rotos 789, Sur", icon: Icons.store_mall_directory),
                 ],
               ),
             ),
             const SizedBox(width: 40),
+
             // Columna Derecha: Mapa
             Expanded(
               flex: 2,
               child: Container(
                 height: 400,
                 decoration: BoxDecoration(
-                  color: AppStyles.borderColor,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppStyles.borderColor),
                 ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.location_pin, size: 40, color: AppStyles.lightTextColor),
-                      const SizedBox(height: 8),
-                      Text("Placeholder para mapa interactivo", style: AppStyles.bodyTextStyle.copyWith(color: AppStyles.lightTextColor)),
-                    ],
+                child: ClipRRect( // Para que el mapa respete los bordes
+                  borderRadius: BorderRadius.circular(12),
+                  child: GoogleMap(
+                    mapType: MapType.normal,
+                    initialCameraPosition: _kInitialPosition,
+                    markers: _markers,
+                    onMapCreated: (GoogleMapController controller) {
+                      // (Puedes guardar el controlador si quieres)
+                    },
                   ),
                 ),
               ),

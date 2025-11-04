@@ -7,6 +7,8 @@ import 'historial_pedidos_screen.dart';
 import 'direcciones_screen.dart';
 import 'configuracion_screen.dart';
 import '../widgets/responsive_layout.dart';
+import 'mobile_about_us_screen.dart';
+import 'mobile_find_us_screen.dart';
 
 class MobilePerfilScreen extends StatelessWidget {
   const MobilePerfilScreen({super.key});
@@ -108,6 +110,18 @@ class MobilePerfilScreen extends StatelessWidget {
         'action': 'configuracion'
       },
       {
+        'icon': Icons.info_outline,
+        'title': 'Acerca de Nosotros',
+        'subtitle': 'Nuestra historia',
+        'action': 'about_us'
+      },
+      {
+        'icon': Icons.map_outlined,
+        'title': 'Encuéntranos',
+        'subtitle': 'Nuestros distribuidores',
+        'action': 'find_us'
+      },
+      {
         'icon': Icons.logout,
         'title': 'Cerrar Sesión',
         'subtitle': 'Salir de tu cuenta',
@@ -166,6 +180,18 @@ class MobilePerfilScreen extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const ConfiguracionScreen()),
+        );
+        break;
+        case 'about_us':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MobileAboutUsScreen()),
+        );
+        break;
+      case 'find_us':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MobileFindUsScreen()),
         );
         break;
       case 'logout':

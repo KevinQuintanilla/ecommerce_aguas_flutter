@@ -19,6 +19,8 @@ dependencies:
   cached_network_image: ^3.3.0
   intl: ^0.18.1
   video_player: ^2.10.0
+  google_maps_flutter: ^2.13.1
+  google_maps_flutter_web: ^0.5.14+2
 
 dev_dependencies:
   flutter_test:

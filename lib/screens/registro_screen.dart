@@ -5,7 +5,9 @@ import 'login_screen.dart';
 import '../utils/app_styles.dart';
 import 'main_app_screen.dart';
 import '../widgets/responsive_layout.dart';
-import '../utils/constants.dart'; // Asegúrate de tener kApiBaseUrl aquí para el logo
+import '../utils/constants.dart'; 
+import 'privacy_policy_login_screen.dart';
+import 'terms_conditions_login_screen.dart';
 
 class RegistroScreen extends StatefulWidget {
   const RegistroScreen({super.key});
@@ -401,8 +403,10 @@ class _RegistroScreenState extends State<RegistroScreen> {
         children: [
           TextButton(
             onPressed: () {
-              // TODO: Implementar navegación a Política de privacidad
-              print('Navegar a Política de privacidad');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PrivacyPolicyLoginScreen()),
+              );
             },
             child: Text(
               'Política de privacidad',
@@ -415,7 +419,10 @@ class _RegistroScreenState extends State<RegistroScreen> {
           ),
           TextButton(
             onPressed: () {
-              print('Navegar a Términos del servicio');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TermsConditionsLoginScreen()),
+              );
             },
             child: Text(
               'Términos del servicio',
