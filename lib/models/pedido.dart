@@ -19,6 +19,8 @@ class Pedido {
   final String? metodoEnvioNombre;
   final List<ArticuloPedido> articulos;
   final DireccionEnvio? direccionEnvio;
+  final String? clienteNombre;
+  final String? clienteApellido;
 
   Pedido({
     required this.pedidoId,
@@ -40,6 +42,8 @@ class Pedido {
     this.metodoEnvioNombre,
     required this.articulos,
     this.direccionEnvio,
+    this.clienteNombre,
+    this.clienteApellido,
   });
 
   factory Pedido.fromJson(Map<String, dynamic> json) {
@@ -69,6 +73,8 @@ class Pedido {
           .map((articulo) => ArticuloPedido.fromJson(articulo))
           .toList(),
       direccionEnvio: json['calle'] != null ? DireccionEnvio.fromJson(json) : null,
+      clienteNombre: json['cliente_nombre'],
+      clienteApellido: json['cliente_apellido'],
     );
   }
 

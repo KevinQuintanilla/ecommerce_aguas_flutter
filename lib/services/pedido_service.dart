@@ -120,4 +120,45 @@ class PedidoService {
       throw Exception('Error de conexión: $e');
     }
   }
+  // FUNCIONES DE ADMIN
+
+  /// (ADMIN) Obtiene TODOS los pedidos de TODOS los clientes.
+  Future<List<Pedido>> obtenerTodosLosPedidos() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/pedidos/todos'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        // Usamos el mismo modelo Pedido, ya que la estructura es similar
+        return data.map((json) => Pedido.fromJson(json)).toList();
+      } else {
+        throw Exception('Error al cargar todos los pedidos: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
+  }
+
+  /// (ADMIN) Actualiza el estado de un pedido específico.
+  Future<bool> actualizarEstadoPedido(int pedidoId, int estadoId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/pedidos/$pedidoId/estado'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'estado_id': estadoId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      throw Exception('Error de conexión: $e');
+    }
+  }
 }

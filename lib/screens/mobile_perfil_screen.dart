@@ -7,8 +7,14 @@ import 'historial_pedidos_screen.dart';
 import 'direcciones_screen.dart';
 import 'configuracion_screen.dart';
 import '../widgets/responsive_layout.dart';
-import 'mobile_about_us_screen.dart';
+
+// --- CAMBIO AQUÍ ---
+// Estas son las importaciones correctas
+import 'mobile_about_us_screen.dart'; 
 import 'mobile_find_us_screen.dart';
+// --- FIN DEL CAMBIO ---
+
+import 'admin/admin_dashboard_screen.dart';
 
 class MobilePerfilScreen extends StatelessWidget {
   const MobilePerfilScreen({super.key});
@@ -24,6 +30,7 @@ class MobilePerfilScreen extends StatelessWidget {
         foregroundColor: AppStyles.primaryColor,
         elevation: 1,
       ),
+      backgroundColor: AppStyles.backgroundColor, // <-- Fondo gris
       body: ResponsiveLayout( 
         child: SingleChildScrollView( 
           padding: const EdgeInsets.all(AppStyles.defaultPadding),
@@ -90,6 +97,8 @@ class MobilePerfilScreen extends StatelessWidget {
   }
 
   Widget _buildProfileOptions(AuthProvider authProvider, BuildContext context) {
+    
+    // --- LIMPIEZA: Quitamos el "Encuéntranos" duplicado ---
     final options = [
       {
         'icon': Icons.history,
@@ -121,45 +130,76 @@ class MobilePerfilScreen extends StatelessWidget {
         'subtitle': 'Nuestros distribuidores',
         'action': 'find_us'
       },
-      {
-        'icon': Icons.logout,
-        'title': 'Cerrar Sesión',
-        'subtitle': 'Salir de tu cuenta',
-        'action': 'logout',
-        'isLogout': true
-      },
+      // (El duplicado se eliminó)
     ];
+    // --- FIN DE LA LIMPIEZA ---
 
     return Container(
       decoration: AppStyles.cardDecoration,
       child: Column(
-        children: options.map((option) {
-          return ListTile(
-            leading: Icon(
-              option['icon'] as IconData,
-              color: (option['isLogout'] as bool?) == true
-                  ? AppStyles.errorColor
-                  : AppStyles.primaryColor,
-            ),
-            title: Text(
-              option['title'] as String,
-              style: AppStyles.bodyTextStyle.copyWith(
-                color: (option['isLogout'] as bool?) == true
-                    ? AppStyles.errorColor
-                    : AppStyles.textColor,
+        children: [
+          // Mapea las opciones normales
+          ...options.map((option) {
+            return ListTile(
+              leading: Icon(
+                option['icon'] as IconData,
+                color: AppStyles.primaryColor,
               ),
+              title: Text(
+                option['title'] as String,
+                style: AppStyles.bodyTextStyle,
+              ),
+              subtitle: Text(
+                option['subtitle'] as String,
+                style: AppStyles.captionStyle,
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                _handleOptionTap(
+                    option['action'] as String, authProvider, context);
+              },
+            );
+          }).toList(),
+          
+          // Botón de Admin (si es admin)
+          if (authProvider.usuario != null &&
+              authProvider.usuario!.tipoUsuario != 'cliente')
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings, color: AppStyles.accentColor),
+              title: Text(
+                'Panel de Administrador',
+                style: AppStyles.bodyTextStyle.copyWith(color: AppStyles.accentColor, fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                'Gestionar pedidos y productos',
+                style: AppStyles.captionStyle,
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+                );
+              },
+            ),
+
+          // Botón de Cerrar Sesión (siempre al final)
+          ListTile(
+            leading: const Icon(Icons.logout, color: AppStyles.errorColor),
+            title: Text(
+              'Cerrar Sesión',
+              style: AppStyles.bodyTextStyle.copyWith(color: AppStyles.errorColor),
             ),
             subtitle: Text(
-              option['subtitle'] as String,
+              'Salir de tu cuenta',
               style: AppStyles.captionStyle,
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              _handleOptionTap(
-                  option['action'] as String, authProvider, context);
+              _handleOptionTap('logout', authProvider, context);
             },
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -182,7 +222,10 @@ class MobilePerfilScreen extends StatelessWidget {
           MaterialPageRoute(builder: (context) => const ConfiguracionScreen()),
         );
         break;
-        case 'about_us':
+        
+      // --- CAMBIO AQUÍ ---
+      // Ahora apuntan a las pantallas móviles correctas
+      case 'about_us':
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const MobileAboutUsScreen()),
@@ -194,6 +237,8 @@ class MobilePerfilScreen extends StatelessWidget {
           MaterialPageRoute(builder: (context) => const MobileFindUsScreen()),
         );
         break;
+      // --- FIN DEL CAMBIO ---
+        
       case 'logout':
         _mostrarDialogoCerrarSesion(authProvider, context);
         break;
@@ -209,24 +254,8 @@ class MobilePerfilScreen extends StatelessWidget {
     );
   }
 
-  // void _mostrarProximamente(BuildContext context, String feature) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Próximamente'),
-  //       content:
-  //           Text('$feature estará disponible en una próxima actualización.'),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.of(context).pop(),
-  //           child: const Text('OK'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildLoginPrompt(BuildContext context) {
+    // ... (Esta función queda igual) ...
     return Container(
       padding: const EdgeInsets.all(AppStyles.largePadding),
       decoration: AppStyles.cardDecoration,
@@ -268,6 +297,7 @@ class MobilePerfilScreen extends StatelessWidget {
 
   void _mostrarDialogoCerrarSesion(
       AuthProvider authProvider, BuildContext context) {
+    // ... (Esta función queda igual) ...
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -282,7 +312,6 @@ class MobilePerfilScreen extends StatelessWidget {
             onPressed: () {
               authProvider.logout();
               Navigator.of(context).pop();
-              // FORZAR LA NAVEGACIÓN EXPLÍCITA AL LOGIN
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
                 (route) => false,

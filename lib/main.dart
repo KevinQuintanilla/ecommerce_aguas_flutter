@@ -8,6 +8,7 @@ import 'providers/direccion_provider.dart';
 import 'providers/categoria_provider.dart';
 import 'screens/main_app_screen.dart';
 import 'screens/login_screen.dart';
+import 'providers/admin_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PedidoProvider()),
         ChangeNotifierProvider(create: (_) => DireccionProvider()),
         ChangeNotifierProvider(create: (_) => CategoriaProvider()),
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
       child: MaterialApp(
         title: 'Aguas Lourdes',

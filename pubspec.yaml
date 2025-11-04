@@ -21,6 +21,8 @@ dependencies:
   video_player: ^2.10.0
   google_maps_flutter: ^2.13.1
   google_maps_flutter_web: ^0.5.14+2
+  image_picker: ^1.2.0
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

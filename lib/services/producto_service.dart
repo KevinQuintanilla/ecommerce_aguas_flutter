@@ -3,6 +3,10 @@ import 'dart:convert';
 import '../models/producto.dart';
 import '../models/categoria.dart';
 import '../utils/constants.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as path;
+import 'dart:typed_data';
+
 
 class ProductoService {
   // static const String baseUrl = 'http://10.0.2.2:3000/api';
@@ -103,6 +107,56 @@ class ProductoService {
       }
     } catch (e) {
       return {'success': false, 'error': 'Error de conexión: $e'};
+    }
+  }
+  // INICIO DE FUNCIÓN DE ADMIN
+  
+  /// (ADMIN) Crea un nuevo producto y sube la imagen.
+    Future<Map<String, dynamic>> crearProducto(Map<String, dynamic> datosProducto, {Uint8List? bytes, String? fileName}) async {
+    try {
+        // 1. Crea la solicitud Multipart
+        var request = http.MultipartRequest(
+            'POST',
+            Uri.parse('$baseUrl/productos/nuevo'),
+        );
+        
+        // 2. Añade los campos de texto
+        datosProducto.forEach((key, value) {
+            request.fields[key] = value.toString();
+        });
+
+        // 3. Añade el archivo de imagen (desde Bytes)
+        if (bytes != null && fileName != null) {
+            final fileExtension = path.extension(fileName);
+            
+            String mimeType;
+            if (fileExtension.length > 1) { 
+                mimeType = fileExtension.substring(1).toLowerCase(); 
+            } else {
+                mimeType = 'jpeg'; // Fallback seguro
+            }
+            
+            request.files.add(
+                http.MultipartFile.fromBytes( // <-- USAMOS FROMBYTES!
+                    'imagen',
+                    bytes,
+                    filename: fileName, // <-- Añadimos el nombre del archivo
+                    contentType: MediaType('image', mimeType), 
+                ),
+            );
+        }
+
+        final streamedResponse = await request.send();
+        final response = await http.Response.fromStream(streamedResponse);
+
+        if (response.statusCode == 201) { 
+            return {'success': true, 'message': 'Producto creado exitosamente'};
+        } else {
+            final error = json.decode(response.body);
+            return {'success': false, 'error': error['error'] ?? 'Error desconocido al crear producto'};
+        }
+    } catch (e) {
+        return {'success': false, 'error': 'Error de subida: ${e.toString()}'}; 
     }
   }
 }

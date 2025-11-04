@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
-// const bcrypt = require('bcryptjs'); // <-- ELIMINADO
+const fs = require('fs');
+const multer = require('multer');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -21,6 +23,21 @@ const connection = mysql.createConnection({
   port: process.env.DB_PORT || 3306
 });
 
+// Definimos dónde se guardarán los archivos
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // La carpeta 'public' ya existe en tu proyecto
+        // Si el archivo viene en el campo 'imagen', lo guardamos temporalmente en 'uploads'
+        cb(null, 'public/images/uploads'); 
+    },
+    filename: (req, file, cb) => {
+        // Crea un nombre de archivo único con la fecha y la extensión original
+        cb(null, Date.now() + path.extname(file.originalname)); 
+    }
+});
+
+const upload = multer({ storage: storage });
+
 // Conectar a la base de datos
 connection.connect((err) => {
   if (err) {
@@ -30,10 +47,7 @@ connection.connect((err) => {
   }
 });
 
-// --- RUTAS DE PEDIDOS ---
-// (Todas tus rutas de Pedidos, Productos, Direcciones, etc. quedan igual)
-// ...
-// Ruta para crear un pedido
+// --- RUTAS DE PEDIDOS (CLIENTE) ---
 app.post('/api/pedidos', (req, res) => {
   const { cliente_id, direccion_envio_id, metodo_pago_id, metodo_envio_id, items, notas } = req.body;
   if (!cliente_id || !direccion_envio_id || !metodo_pago_id || !metodo_envio_id || !items || items.length === 0) {
@@ -166,6 +180,103 @@ app.get('/api/clientes/:clienteId/pedidos', (req, res) => {
       });
   });
 });
+app.get('/api/metodos-envio', (req, res) => {
+  const query = 'SELECT * FROM metodos_envio WHERE activo = 1';
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error obteniendo métodos de envío:', err);
+      return res.status(500).json({ error: 'Error en la base de datos' });
+    }
+    res.json(results);
+  });
+});
+app.get('/api/metodos-pago', (req, res) => {
+  const query = 'SELECT * FROM metodos_pago WHERE activo = 1';
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error obteniendo métodos de pago:', err);
+      return res.status(500).json({ error: 'Error en la base de datos' });
+    }
+    res.json(results);
+  });
+});
+
+// ======================================================
+// --- RUTAS DE ADMIN ---
+// ======================================================
+
+// 1. Obtener TODOS los pedidos (para el panel de admin)
+app.get('/api/pedidos/todos', (req, res) => {
+  
+  const query = `
+    SELECT 
+      p.*,
+      e.nombre as estado_nombre,
+      c.nombre as cliente_nombre,
+      c.apellido as cliente_apellido,
+      d.calle, d.numero_exterior, d.numero_interior, d.colonia, d.ciudad, d.estado, d.codigo_postal, d.pais, d.referencias
+    FROM pedidos p
+    LEFT JOIN estados_pedido e ON p.estado_pedido_id = e.estado_pedido_id
+    LEFT JOIN clientes c ON p.cliente_id = c.cliente_id
+    LEFT JOIN direcciones d ON p.direccion_envio_id = d.direccion_id
+    ORDER BY p.fecha_pedido DESC
+    LIMIT 100
+  `;
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error obteniendo todos los pedidos:', err);
+      return res.status(500).json({ error: 'Error en la base de datos' });
+    }
+    const pedidosConArticulos = results.map(pedido => {
+      return new Promise((resolve, reject) => {
+        const articulosQuery = `
+          SELECT ap.*, pr.nombre as producto_nombre, pr.imagen_url
+          FROM articulos_pedido ap
+          LEFT JOIN productos pr ON ap.producto_id = pr.producto_id
+          WHERE ap.pedido_id = ?
+        `;
+        connection.query(articulosQuery, [pedido.pedido_id], (err, articulos) => {
+          if (err) reject(err);
+          else resolve({ ...pedido, articulos }); // Añade los artículos al objeto pedido
+        });
+      });
+    });
+    
+    // 3. Esperamos que todas las consultas de artículos terminen
+    Promise.all(pedidosConArticulos)
+      .then(pedidosCompletos => {
+        res.json(pedidosCompletos); // Enviamos el JSON completo
+      })
+      .catch(error => {
+        res.status(500).json({ error: 'Error obteniendo artículos de pedidos' });
+      });
+  });
+});
+
+// 2. Actualizar el estado de un pedido
+app.put('/api/pedidos/:id/estado', (req, res) => {
+  const { id } = req.params;
+  const { estado_id } = req.body;
+
+  if (!estado_id) {
+    return res.status(400).json({ error: 'Se requiere el estado_id' });
+  }
+
+  const query = 'UPDATE pedidos SET estado_pedido_id = ? WHERE pedido_id = ?';
+  
+  connection.query(query, [estado_id, id], (err, result) => {
+    if (err) {
+      console.error('Error actualizando estado del pedido:', err);
+      return res.status(500).json({ error: 'Error en la base de datos' });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+    res.json({ success: true, message: 'Estado del pedido actualizado' });
+  });
+});
+
+// --- RUTA DE CLIENTE ---
 app.get('/api/pedidos/:pedidoId', (req, res) => {
   const pedidoId = req.params.pedidoId;
   const pedidoQuery = `
@@ -206,31 +317,8 @@ app.get('/api/pedidos/:pedidoId', (req, res) => {
     });
   });
 });
-app.get('/api/metodos-envio', (req, res) => {
-  const query = 'SELECT * FROM metodos_envio WHERE activo = 1';
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error obteniendo métodos de envío:', err);
-      return res.status(500).json({ error: 'Error en la base de datos' });
-    }
-    res.json(results);
-  });
-});
-app.get('/api/metodos-pago', (req, res) => {
-  const query = 'SELECT * FROM metodos_pago WHERE activo = 1';
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error obteniendo métodos de pago:', err);
-      return res.status(500).json({ error: 'Error en la base de datos' });
-    }
-    res.json(results);
-  });
-});
-// ...
 
-// --- RUTAS DE AUTENTICACIÓN (REVERTIDAS A TEXTO PLANO) ---
-
-// Ruta para login de usuarios (SIN HASH)
+// --- RUTAS DE AUTENTICACIÓN ---
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -238,7 +326,6 @@ app.post('/api/auth/login', (req, res) => {
     return res.status(400).json({ error: 'Email y contraseña requeridos' });
   }
 
-  // Obtenemos el teléfono también
   const query = `
     SELECT u.*, c.cliente_id, c.nombre, c.apellido, c.telefono 
     FROM usuarios u 
@@ -258,8 +345,6 @@ app.post('/api/auth/login', (req, res) => {
 
     const usuario = results[0];
     
-    // --- REVERSIÓN ---
-    // Volvemos a la comparación simple
     if (usuario.password_hash === password) {
       res.json({
         success: true,
@@ -268,7 +353,7 @@ app.post('/api/auth/login', (req, res) => {
           email: usuario.email,
           nombre: usuario.nombre,
           apellido: usuario.apellido,
-          telefono: usuario.telefono, // <-- (Incluido para tu fix de 'usuario.dart')
+          telefono: usuario.telefono,
           tipo_usuario: usuario.tipo_usuario,
           cliente_id: usuario.cliente_id
         }
@@ -278,21 +363,13 @@ app.post('/api/auth/login', (req, res) => {
     }
   });
 });
-
-// Ruta para registro de usuarios (SIN HASH)
-app.post('/api/auth/register', (req, res) => { // <-- Se quita 'async'
+app.post('/api/auth/register', (req, res) => {
   const { email, password, nombre, apellido, telefono } = req.body;
 
-  // Validaciones básicas
   if (!email || !password || !nombre || !apellido) {
     return res.status(400).json({ error: 'Todos los campos son requeridos' });
   }
 
-  // --- REVERSIÓN ---
-  // Se quita el try/catch y el hasheo
-  // -------------------
-
-  // Verificar si el email ya existe
   const checkEmailQuery = 'SELECT usuario_id FROM usuarios WHERE email = ?';
   connection.query(checkEmailQuery, [email], (err, results) => {
     if (err) {
@@ -303,14 +380,11 @@ app.post('/api/auth/register', (req, res) => { // <-- Se quita 'async'
       return res.status(400).json({ error: 'El email ya está registrado' });
     }
 
-    // Insertar nuevo usuario
     const insertUsuarioQuery = `
       INSERT INTO usuarios (email, password_hash, tipo_usuario, activo) 
       VALUES (?, ?, 'cliente', 1)
     `;
     
-    // --- REVERSIÓN ---
-    // Se vuelve a pasar 'password' directamente
     connection.query(insertUsuarioQuery, [email, password], (err, result) => {
       if (err) {
         return res.status(500).json({ error: 'Error creando usuario' });
@@ -318,7 +392,6 @@ app.post('/api/auth/register', (req, res) => { // <-- Se quita 'async'
 
       const usuarioId = result.insertId;
 
-      // Insertar cliente
       const insertClienteQuery = `
         INSERT INTO clientes (usuario_id, nombre, apellido, telefono) 
         VALUES (?, ?, ?, ?)
@@ -326,7 +399,6 @@ app.post('/api/auth/register', (req, res) => { // <-- Se quita 'async'
       
       connection.query(insertClienteQuery, [usuarioId, nombre, apellido, telefono], (err, result) => {
         if (err) {
-          // Si falla, eliminar el usuario creado
           connection.query('DELETE FROM usuarios WHERE usuario_id = ?', [usuarioId]);
           return res.status(500).json({ error: 'Error creando perfil de cliente' });
         }
@@ -356,6 +428,8 @@ app.get('/api', (req, res) => {
     database: 'MySQL'
   });
 });
+
+// Ruta para la página "Tienda" (Catálogo)
 app.get('/api/productos', (req, res) => {
   const { categoria_id } = req.query;
   let query = `
@@ -388,6 +462,8 @@ app.get('/api/productos', (req, res) => {
     res.json(results);
   });
 });
+
+// Ruta para "Productos Destacados" (Home screen)
 app.get('/api/productos/destacados', (req, res) => {
   const query = `
     SELECT 
@@ -411,7 +487,7 @@ app.get('/api/productos/destacados', (req, res) => {
   });
 });
 
-// --- RUTA RESTAURADA (Para la pantalla "Detalle de Producto") ---
+// Ruta para "Detalle de Producto"
 app.get('/api/productos/:id', (req, res) => {
   const productId = req.params.id;
   const productQuery = 'SELECT * FROM productos WHERE producto_id = ? AND activo = 1';
@@ -443,7 +519,85 @@ app.get('/api/productos/:id', (req, res) => {
     });
   });
 });
-// --- FIN DE LA RUTA RESTAURADA ---
+
+// 3. Añadir un nuevo producto (ADMIN)
+app.post('/api/productos/nuevo', upload.single('imagen'), (req, res) => {
+    // req.file contiene la información de la imagen subida por Multer (guardada temporalmente)
+    const {
+        categoria_id,
+        nombre,
+        descripcion,
+        precio_actual,
+        sku,
+    } = req.body;
+    
+    // El frontend enviará un campo extra 'tipo_categoria' ('agua' o 'merch')
+    const tipoCategoria = req.body.tipo_categoria; 
+    
+    // Validamos datos básicos
+    if (!categoria_id || !nombre || !precio_actual || !req.file || !tipoCategoria) {
+        // Si hay un error, intentamos eliminar el archivo temporal
+        if (req.file) {
+            const fs = require('fs');
+            fs.unlinkSync(req.file.path);
+        }
+        return res.status(400).json({ error: 'Faltan datos requeridos (nombre, precio, categoría, tipo_categoria o imagen)' });
+    }
+
+    // Determinamos la subcarpeta final
+    let subfolder;
+    if (tipoCategoria.toLowerCase() === 'agua') {
+        subfolder = 'agua';
+    } else if (tipoCategoria.toLowerCase() === 'merch') {
+        subfolder = 'merch';
+    } else {
+        subfolder = 'other';
+    }
+    
+    const finalImagePath = `public/images/${subfolder}/${req.file.filename}`;
+    const publicUrl = `/images/${subfolder}/${req.file.filename}`;
+    
+    // Movemos el archivo temporal (de 'uploads') a la carpeta final (agua o merch)
+    const fs = require('fs');
+    try {
+        fs.renameSync(req.file.path, finalImagePath);
+    } catch (moveErr) {
+        console.error('Error moviendo el archivo:', moveErr);
+        return res.status(500).json({ error: 'Error interno al guardar la imagen.' });
+    }
+
+    // Insertamos el producto en la BD
+    const query = `
+        INSERT INTO productos 
+        (categoria_id, nombre, descripcion, precio_actual, sku, imagen_url, activo, fecha_creacion, fecha_actualizacion)
+        VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+    `;
+    
+    connection.query(query, [
+        categoria_id,
+        nombre,
+        descripcion || null,
+        precio_actual,
+        sku || null,
+        publicUrl // Usamos la URL pública
+    ], (err, result) => {
+        if (err) {
+            // Si la BD falla, intentamos eliminar el archivo que ya movimos
+            fs.unlinkSync(finalImagePath); 
+            console.error('Error creando producto en BD:', err);
+            return res.status(500).json({ error: 'Error en la base de datos al crear el producto.' });
+        }
+        
+        // Devolvemos el producto recién creado
+        const newProductId = result.insertId;
+        res.status(201).json({ 
+            success: true, 
+            producto_id: newProductId,
+            message: 'Producto creado exitosamente',
+            imagen_url: publicUrl 
+        });
+    });
+});
 
 app.get('/api/categorias', (req, res) => {
   const query = 'SELECT * FROM categorias WHERE activa = 1';
@@ -551,19 +705,15 @@ app.post('/api/resenas', (req, res) => {
     comentario 
   } = req.body;
 
-  // Validación simple
   if (!producto_id || !cliente_id || !pedido_id || !puntuacion) {
     return res.status(400).json({ error: 'Datos incompletos para la reseña' });
   }
-
-  // (Opcional: podrías añadir una lógica para evitar reseñas duplicadas)
   
   const query = `
     INSERT INTO reseñas 
       (producto_id, cliente_id, pedido_id, puntuacion, comentario, aprobado, activo)
     VALUES 
       (?, ?, ?, ?, ?, 1, 1) 
-    -- (La ponemos como 'aprobado = 1' automáticamente por simplicidad)
   `;
   
   connection.query(query, 
@@ -579,8 +729,6 @@ app.post('/api/resenas', (req, res) => {
 });
 
 // --- RUTAS DE CONFIGURACIÓN DE PERFIL ---
-
-// 1. Actualizar datos personales (Nombre, Apellido, Teléfono)
 app.put('/api/clientes/:id', (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, telefono } = req.body;
@@ -603,7 +751,6 @@ app.put('/api/clientes/:id', (req, res) => {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
     
-    // Devolvemos los datos actualizados del usuario/cliente
     const getUserQuery = `
       SELECT u.*, c.cliente_id, c.nombre, c.apellido, c.telefono 
       FROM usuarios u 
@@ -614,7 +761,6 @@ app.put('/api/clientes/:id', (req, res) => {
       if (err || users.length === 0) {
         return res.status(500).json({ error: 'Perfil actualizado, pero no se pudo recuperar el usuario' });
       }
-      // Devolvemos el mismo objeto de usuario que en el login
       res.json({
         success: true,
         message: 'Perfil actualizado exitosamente',
@@ -623,8 +769,6 @@ app.put('/api/clientes/:id', (req, res) => {
     });
   });
 });
-
-// 2. Cambiar la contraseña 
 app.put('/api/usuarios/:id/password', (req, res) => { 
   const { id } = req.params;
   const { currentPassword, newPassword } = req.body;
@@ -633,7 +777,6 @@ app.put('/api/usuarios/:id/password', (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son requeridos' });
   }
 
-  //  Obtener la contraseña actual del usuario
   const getPassQuery = 'SELECT password_hash FROM usuarios WHERE usuario_id = ?';
   connection.query(getPassQuery, [id], (err, results) => {
     if (err) {
@@ -645,13 +788,10 @@ app.put('/api/usuarios/:id/password', (req, res) => {
 
     const currentSavedPassword = results[0].password_hash;
 
-    // Verificar si la contraseña actual es correcta
     if (currentPassword !== currentSavedPassword) {
-      // Si la comparación falla, enviamos el error
       return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
     }
 
-    // Actualizar la contraseña en la BD 
     const updateQuery = 'UPDATE usuarios SET password_hash = ? WHERE usuario_id = ?';
     connection.query(updateQuery, [newPassword, id], (err, result) => {
       if (err) {
@@ -661,7 +801,6 @@ app.put('/api/usuarios/:id/password', (req, res) => {
     });
   });
 });
-
 
 // --- Iniciar servidor ---
 app.listen(PORT, () => {

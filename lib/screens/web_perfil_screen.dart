@@ -11,6 +11,9 @@ import 'configuracion_screen.dart';
 import 'login_screen.dart';
 import 'main_app_screen.dart';
 
+// --- 1. AÑADE LA IMPORTACIÓN DE LA PANTALLA DE ADMIN ---
+import 'admin/admin_dashboard_screen.dart';
+
 class WebPerfilScreen extends StatelessWidget {
   const WebPerfilScreen({super.key});
 
@@ -55,7 +58,7 @@ class WebPerfilScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Tarjeta de información del usuario (copiada de mobile)
+        // Tarjeta de información del usuario
         _buildUserProfile(authProvider.usuario!),
         const SizedBox(height: AppStyles.largePadding),
 
@@ -67,7 +70,7 @@ class WebPerfilScreen extends StatelessWidget {
         ),
         const SizedBox(height: AppStyles.defaultPadding),
 
-        // Opciones en un Row de 3 tarjetas
+        // Opciones en un Row
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -121,6 +124,28 @@ class WebPerfilScreen extends StatelessWidget {
                 },
               ),
             ),
+
+            // --- 2. AÑADE LA TARJETA DE ADMIN CONDICIONAL ---
+            if (authProvider.usuario != null &&
+                authProvider.usuario!.tipoUsuario != 'cliente') ...[
+              const SizedBox(width: AppStyles.defaultPadding),
+              Expanded(
+                child: _buildOptionCard(
+                  context: context,
+                  icon: Icons.admin_panel_settings,
+                  title: 'Admin Panel',
+                  subtitle: 'Gestionar la tienda',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+                    );
+                  },
+                  iconColor: AppStyles.accentColor, // <-- Color de acento
+                ),
+              ),
+            ]
+            // --- FIN DE LA ADICIÓN ---
           ],
         ),
         const SizedBox(height: AppStyles.largePadding),
@@ -148,7 +173,7 @@ class WebPerfilScreen extends StatelessWidget {
     );
   }
 
-  // Tarjeta de información del usuario (casi idéntica a la de mobile)
+  // Tarjeta de información del usuario
   Widget _buildUserProfile(Usuario usuario) {
     return Container(
       padding: const EdgeInsets.all(AppStyles.mediumPadding),
@@ -183,13 +208,14 @@ class WebPerfilScreen extends StatelessWidget {
     );
   }
 
-  // El nuevo widget de tarjeta para el layout web
+  // --- 3. MODIFICA LA TARJETA DE OPCIÓN (para aceptar color) ---
   Widget _buildOptionCard({
     required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
+    Color? iconColor, // <-- AÑADE ESTE PARÁMETRO
   }) {
     return Card(
       elevation: 2,
@@ -206,7 +232,11 @@ class WebPerfilScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 32, color: AppStyles.primaryColor),
+              Icon(
+                icon,
+                size: 32,
+                color: iconColor ?? AppStyles.primaryColor, // <-- USA EL PARÁMETRO
+              ),
               const SizedBox(height: AppStyles.defaultPadding),
               Text(title, style: AppStyles.subheadingStyle),
               const SizedBox(height: AppStyles.smallPadding),
@@ -218,7 +248,7 @@ class WebPerfilScreen extends StatelessWidget {
     );
   }
 
-  // Diálogo de cerrar sesión (copiado de mobile)
+  // Diálogo de cerrar sesión
   void _mostrarDialogoCerrarSesion(
       AuthProvider authProvider, BuildContext context) {
     showDialog(
@@ -251,8 +281,6 @@ class WebPerfilScreen extends StatelessWidget {
   }
 
   // --- WIDGET PARA USUARIO NO AUTENTICADO ---
-
-  // (Copiado directamente de tu mobile_perfil_screen)
   Widget _buildWebLoginPrompt(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppStyles.largePadding),
@@ -286,7 +314,6 @@ class WebPerfilScreen extends StatelessWidget {
               );
             },
             style: AppStyles.primaryButtonStyle.copyWith(
-              // Quitamos el ancho infinito para que se ajuste al texto
               minimumSize: MaterialStateProperty.all(const Size(150, 50)),
             ),
             child: const Text('Iniciar Sesión'),
