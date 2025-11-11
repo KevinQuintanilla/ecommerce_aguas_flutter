@@ -11,6 +11,10 @@ import 'confirmacion_pedido_screen.dart';
 import '../models/carrito_item.dart';
 import '../models/pedido.dart';
 import '../widgets/responsive_layout.dart';
+import 'stripe_webview_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
+
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -493,54 +497,117 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Future<void> _confirmarPedido(
-    CarritoProvider carritoProvider,
-    PedidoProvider pedidoProvider,
-    AuthProvider authProvider,
-    double total,
-  ) async {
-    // Preparar items para el pedido
-    final items = carritoProvider.items.map((item) {
-      return {
-        'producto_id': item.productoId,
-        'cantidad': item.cantidad,
-        'precio': item.precio,
-      };
-    }).toList();
+ // --- REEMPLAZA TU _confirmarPedido CON ESTA VERSIÓN FINAL ---
 
-    // Crear el pedido
-    final resultado = await pedidoProvider.crearPedido(
-      clienteId: authProvider.usuario!.clienteId ?? 1, // Temporal
-      direccionEnvioId: 1, // Temporal - primera dirección
-      metodoPagoId: _metodoPagoSeleccionado!,
-      metodoEnvioId: _metodoEnvioSeleccionado!,
-      items: items,
-      notas: _notasController.text.isEmpty ? null : _notasController.text,
-    );
+Future<void> _confirmarPedido(
+  CarritoProvider carritoProvider,
+  PedidoProvider pedidoProvider,
+  AuthProvider authProvider,
+  double total,
+) async {
+  // Preparar items para el pedido
+  final items = carritoProvider.items.map((item) {
+    return {
+      'producto_id': item.productoId,
+      'cantidad': item.cantidad,
+      'precio': item.precio,
+    };
+  }).toList();
 
-    if (resultado['success'] == true && context.mounted) {
-      // Limpiar carrito
+  // 1. Crear el pedido en estado "Pendiente" en nuestra BD
+  final resultadoPedido = await pedidoProvider.crearPedido(
+    clienteId: authProvider.usuario!.clienteId ?? 1,
+    direccionEnvioId: 1, // Temporal
+    metodoPagoId: _metodoPagoSeleccionado!,
+    metodoEnvioId: _metodoEnvioSeleccionado!,
+    items: items,
+    notas: _notasController.text.isEmpty ? null : _notasController.text,
+  );
+
+  if (resultadoPedido['success'] == true && context.mounted) {
+    final Pedido pedidoCreado = resultadoPedido['pedido'] as Pedido;
+
+    bool esPagoConTarjeta = (_metodoPagoSeleccionado == 1 || _metodoPagoSeleccionado == 2);
+
+    if (esPagoConTarjeta) {
+      // --- FLUJO STRIPE ---
+      final resultadoStripe = await pedidoProvider.iniciarPagoStripe(
+        pedidoCreado.pedidoId,
+      );
+
+      if (resultadoStripe['success'] == true && context.mounted) {
+        final String urlPago = resultadoStripe['url'];
+
+        // --- ¡NUEVA LÓGICA DE PLATAFORMA! ---
+        if (kIsWeb) {
+          // --- WEB (Chrome/Edge) ---
+          // Abrimos Stripe en una NUEVA pestaña del navegador.
+          final uri = Uri.parse(urlPago);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, webOnlyWindowName: '_blank');
+          }
+
+          // Como el pago ocurre en otra pestaña, no podemos "esperar"
+          // el resultado. Simplemente asumimos que el usuario fue enviado.
+          // El Webhook en tu server.js actualizará el estado real del pago.
+
+          // Limpiamos el carrito y vamos a la confirmación.
+          carritoProvider.limpiarCarrito();
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => ConfirmacionPedidoScreen(
+                pedido: pedidoCreado, // Pasa el pedido (aún pendiente)
+              ),
+            ),
+            (route) => route.isFirst,
+          );
+
+        } else {
+          // --- MÓVIL (Android/iOS) ---
+          // Usamos el InAppWebView que ya teníamos. Esto NO fallará.
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => StripeWebviewScreen(
+                pedido: pedidoCreado,
+                urlPago: urlPago,
+              ),
+            ),
+          );
+        }
+        // --- FIN LÓGICA DE PLATAFORMA ---
+
+      } else if (context.mounted) {
+        // Error al crear sesión en Stripe
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(resultadoStripe['error'] ?? 'Error al iniciar pago con Stripe'),
+            backgroundColor: AppStyles.errorColor,
+          ),
+        );
+      }
+    } else {
+      // --- FLUJO "EFECTIVO" --- (sin cambios)
       carritoProvider.limpiarCarrito();
-
-      // Navegar a pantalla de confirmación
-      Navigator.of(context).push(
+      Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => ConfirmacionPedidoScreen(
-            pedido: resultado['pedido'] as Pedido,
+            pedido: pedidoCreado,
           ),
         ),
-      );
-    } else if (context.mounted) {
-      // Mostrar error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(resultado['error'] ?? 'Error al crear pedido'),
-          backgroundColor: AppStyles.errorColor,
-          duration: const Duration(seconds: 3),
-        ),
+        (route) => route.isFirst,
       );
     }
+
+  } else if (context.mounted) {
+    // Error al crear el pedido en nuestra BD
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(resultadoPedido['error'] ?? 'Error al crear pedido'),
+        backgroundColor: AppStyles.errorColor,
+      ),
+    );
   }
+}
 
   double _getCostoEnvio() {
     if (_metodoEnvioSeleccionado == null) return 0.0;

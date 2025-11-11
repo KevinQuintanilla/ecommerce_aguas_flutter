@@ -1,11 +1,20 @@
+// lib/providers/pedido_provider.dart
+
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
 import '../models/pedido.dart';
 import '../models/metodo_pago.dart';
 import '../services/pedido_service.dart';
+import '../utils/constants.dart'; // <--- ¡AÑADIDO!
 
 class PedidoProvider with ChangeNotifier {
   final PedidoService _pedidoService = PedidoService();
   
+  // ¡CAMBIADO! Ahora usa tu constante kApiBaseUrl
+  final String _baseUrl = '${kApiBaseUrl}/api'; 
+
   List<Pedido> _pedidos = [];
   List<MetodoPago> _metodosPago = [];
   List<MetodoEnvio> _metodosEnvio = [];
@@ -71,6 +80,8 @@ class PedidoProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      // Asumimos que _pedidoService también usa la constante, 
+      // si no, habría que pasarle el _baseUrl
       final resultado = await _pedidoService.crearPedido(
         clienteId: clienteId,
         direccionEnvioId: direccionEnvioId,
@@ -83,7 +94,6 @@ class PedidoProvider with ChangeNotifier {
       _cargando = false;
       
       if (resultado['success'] == true) {
-        // Agregar el nuevo pedido a la lista
         _pedidos.insert(0, resultado['pedido'] as Pedido);
         notifyListeners();
       }
@@ -92,6 +102,41 @@ class PedidoProvider with ChangeNotifier {
     } catch (e) {
       _cargando = false;
       _error = 'Error al crear pedido: $e';
+      notifyListeners();
+      return {'success': false, 'error': _error};
+    }
+  }
+
+  // Función de pago de Stripe (sin cambios, solo usa la nueva _baseUrl)
+  Future<Map<String, dynamic>> iniciarPagoStripe(int pedidoId) async {
+    _cargando = true;
+    _error = '';
+    notifyListeners();
+
+    try {
+      final url = Uri.parse('$_baseUrl/pagos/crear-sesion-stripe');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'pedido_id': pedidoId}),
+      );
+
+      _cargando = false;
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['url'] != null) {
+          return {'success': true, 'url': data['url']};
+        } else {
+          return {'success': false, 'error': 'No se recibió la URL de pago'};
+        }
+      } else {
+        final data = json.decode(response.body);
+        return {'success': false, 'error': data['error'] ?? 'Error del servidor'};
+      }
+    } catch (e) {
+      _cargando = false;
+      _error = 'Error al iniciar pago: $e';
       notifyListeners();
       return {'success': false, 'error': _error};
     }
