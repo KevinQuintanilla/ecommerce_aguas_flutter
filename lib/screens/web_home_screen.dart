@@ -103,7 +103,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> with SingleTickerProvider
     width: double.infinity,
     color: AppStyles.backgroundColor, 
     child: Image.network(
-      '$kApiBaseUrl/images/other/banner-300x132.webp',
+      '$kApiBaseUrl/images/other/banner-300x132.png',
       fit: BoxFit.cover, 
 
       // Muestra un 'Cargando...'
