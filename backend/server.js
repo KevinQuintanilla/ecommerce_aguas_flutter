@@ -124,9 +124,12 @@ app.post("/api/pagos/crear-sesion-stripe", async (req, res) => {
       customer_email: pedido.customer_email,
       // ¡MUY IMPORTANTE! Guardamos nuestro ID del pedido
       client_reference_id: pedido_id.toString(),
-      // URLs a las que Stripe redirigirá (cámbialas por tus URLs de producción)
-      success_url: 'http://localhost:3000/pago-exitoso.html',
-      cancel_url: 'http://localhost:3000/pago-cancelado.html',
+      
+      // ================== ¡CAMBIO AQUÍ! ==================
+      // Apuntamos a la IP pública de tu servidor FRONTEND (frontnginx)
+      success_url: 'http://136.116.168.168/pago-exitoso.html',
+      cancel_url: 'http://136.116.168.168/pago-cancelado.html',
+      // ===================================================
     });
 
     // 5. Devolver la URL de pago a Flutter

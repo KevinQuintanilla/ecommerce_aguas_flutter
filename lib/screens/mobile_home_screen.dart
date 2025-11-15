@@ -118,7 +118,7 @@ class _HomeContent extends StatelessWidget {
   // --- WIDGET: BANNER ---
   Widget _buildHeroImage() {
     return Image.network(
-      '$kApiBaseUrl/images/other/banner-300x132.webp',
+      '$kApiBaseUrl/images/other/banner-300x132.png',
       fit: BoxFit.cover,
       width: double.infinity,
       errorBuilder: (context, error, stackTrace) => Container(
