@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/producto.dart';
 import '../providers/carrito_provider.dart';
 import '../utils/app_styles.dart';
+import '../utils/constants.dart';
 
 class ProductoCard extends StatelessWidget {
   final Producto producto;
@@ -37,7 +38,7 @@ class ProductoCard extends StatelessWidget {
                 child: producto.imagenUrl != null
                     ? Image.network(
                         // Asumimos que la API corre en localhost
-                        'http://localhost:3000${producto.imagenUrl!}',
+                        '$kApiBaseUrl${producto.imagenUrl!}',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Icon(
